@@ -41,7 +41,7 @@ dataiter = iter(trainloader)
 images, labels = dataiter.next()
 
 # show images
-imshow(torchvision.utils.make_grid(images))
+#imshow(torchvision.utils.make_grid(images))
 # print labels
 print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
@@ -57,20 +57,45 @@ import torch.nn.functional as F
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        #32 x 32 image
+
+        #we will have 3 convolution operations
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=5, kernel_size=3)
+        self.conv2 = nn.Conv2d(in_channels=5, out_channels=7, kernel_size=3)
+        self.conv3 = nn.Conv2d(in_channels=7, out_channels=12, kernel_size=3)
+
+        #when we apply max pooling, use 2x2 kernel, stride 2
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        #we will have 1 global average pooling layer
+        self.gap = nn.AvgPool2d((4,2))
+
+        #we will have 3 fully connected operations
+        self.fc1 = nn.Linear(in_features = 4 * 4 * 12, out_features = 12)
+        self.fc2 = nn.Linear(in_features= 12, out_features= 10)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+
+        #first round of convolution and max pooling
+        x = F.relu(self.conv1(x)) # convolution
+        #print(x.shape)
+        x = self.pool(x) #max pooling
+        #print(x.shape)
+
+        #second round of convolution and max pooling
+        x = F.relu(self.conv2(x)) #convolution
+        #print(x.shape)
+        x = self.pool(x) #max pooling
+        #print(x.shape)
+
+        #third round of convolution
+        x = F.relu(self.conv3(x))
+        #print(x.shape)
+
+        #fcnn to classifier, fcnn to output labels
+        x = x.view(-1, 4 * 4 * 12) #the "-1" is fill in the blank row size, col size is 4*4*12
+        x = self.fc1(x)
+        x = self.fc2(x)
         return x
 
 net = Net()
