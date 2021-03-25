@@ -59,21 +59,22 @@ class Net(nn.Module):
         super(Net, self).__init__()
         #32 x 32 image
 
-        #we will have 3 convolution operations
+        #define our 3 convolution operations
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=5, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=5, out_channels=7, kernel_size=3)
         self.conv3 = nn.Conv2d(in_channels=7, out_channels=12, kernel_size=3)
 
-        #when we apply max pooling, use 2x2 kernel, stride 2
+        #define our max pooling operations
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        #we will have 1 global average pooling layer
-        self.gap = nn.AvgPool2d((4,2))
+        #define our global average pooling operation
+        self.gap = nn.AvgPool2d(kernel_size=2, padding=1)
 
-        #we will have 3 fully connected operations
-        self.fc1 = nn.Linear(in_features = 4 * 4 * 12, out_features = 12)
-        self.fc2 = nn.Linear(in_features= 12, out_features= 10)
+        #readout layer is the class outputs (10 labels)
+        #self.fc1 = nn.Linear(in_features = 3 * 3 * 12, out_features = 12)
+        #self.fc2 = nn.Linear(in_features= 12, out_features= 10)
 
+        self.fc = nn.Linear(in_features=3*3*12, out_features=10)
     def forward(self, x):
 
         #first round of convolution and max pooling
@@ -92,10 +93,15 @@ class Net(nn.Module):
         x = F.relu(self.conv3(x))
         #print(x.shape)
 
+        x = self.gap(x).flatten()
+        #print(x.shape)
+
         #fcnn to classifier, fcnn to output labels
-        x = x.view(-1, 4 * 4 * 12) #the "-1" is fill in the blank row size, col size is 4*4*12
-        x = self.fc1(x)
-        x = self.fc2(x)
+        x = x.view(-1, 3 * 3 * 12) #the "-1" is fill in the blank row size, col size is 4*4*12
+        #x = self.fc1(x)
+        #x = self.fc2(x)
+
+        x = self.fc(x)
         return x
 
 net = Net()
