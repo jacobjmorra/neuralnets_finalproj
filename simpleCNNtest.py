@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+import pandas as pd
 
 # functions to show an image
 
@@ -224,6 +225,11 @@ print("Testing on " , len(outputs), " samples..")
 _, predicted = torch.max(outputs, 1)
 
 print(outputs)
+
+## I believe this should store your output as a CSV in the main directory.
+output_df = pd.DataFrame(output.numpy())
+output_df.to_csv('raw_output.csv', sep = ",", index = False)
+
 #print(predicted)
 
 #classes = ('plane', 'car', 'bird', 'cat',
