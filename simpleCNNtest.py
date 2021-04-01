@@ -227,10 +227,7 @@ _, predicted = torch.max(outputs, 1)
 #print(outputs)
 #print(len(outputs))
 
-#print(type(outputs))
-
 outputs_detach = outputs.detach().numpy()
-#print(len(outputs_detach))
 
 ## Anthony: I believe this should store your output as a CSV in the main directory.
 output_df = pd.DataFrame(outputs_detach)
