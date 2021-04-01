@@ -1,4 +1,4 @@
-pacman::p_load(tidyverse, reshape)
+pacman::p_load(tidyverse, reshape, ggthemes)
 raw_output = read.csv("raw_output.csv")
 
 #Recording numerosity as a variable
@@ -28,21 +28,22 @@ cat("Significant units:", length(sig_units[,1]))
 
 # Let's find most significant units!!
 cat("\nMost to least significant units:\n")
-for (i in 1:10) {
+for (i in 1:12) {
   this_unit = sig_units[which.min(sig_units[,2]),]
   cat("Unit:", this_unit[1], "\tp:", this_unit[2], "\n")
   sig_units = sig_units[-which.min(sig_units[,2]),]
 }
 
 # Keeping only 10 most sig units in data
-uoi = raw_output[,c(5,6,2,8,9,41,23,3,4,86,109)]
-colnames(uoi) = c("5","6","2","8","9","41","23","3","4","86","numerosity")
+uoi = raw_output[,c(5,6,2,8,9,41,23,3,4,86,45,89,109)]
+colnames(uoi) = c("5","6","2","8","9","41","23","3","4","86", "45", "89","numerosity")
 uoi = melt(uoi, id ="numerosity" )
 colnames(uoi) = c("Numerosity", "Unit", "Activation")
 
 
 uoi_summary = uoi %>% group_by(Numerosity, Unit) %>% summarise(mean = mean(Activation))
-uoi_summary %>% ggplot(., aes(x=Numerosity, y = mean, group = Unit, color = Unit)) + geom_point(size = 2) + geom_line(size = 1.2)
+uoi_summary %>% ggplot(., aes(x=Numerosity, y = mean, group = Unit, color = Unit)) + geom_point(size = 2) + geom_line(size = 1.2) +
+  theme_hc() + ggtitle("Mean unit activations across numerosities") + ylab("Mean Activation")
 
 
 
