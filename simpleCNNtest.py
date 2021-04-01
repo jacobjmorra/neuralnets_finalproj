@@ -109,7 +109,7 @@ net.load_state_dict(torch.load(PATH))
 
 
 #my images
-image_dir = '../neuralnets_finalproj'
+image_dir = '../neuralnets_finalproj/images'
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -118,7 +118,7 @@ transform = transforms.Compose(
 dataset = datasets.ImageFolder(image_dir, transform=transform)
 #print(dataset)
 
-newloader = torch.utils.data.DataLoader(dataset, batch_size=100,
+newloader = torch.utils.data.DataLoader(dataset, batch_size=800,
                                          shuffle=False, num_workers=2)
 
 
@@ -224,28 +224,14 @@ print("Testing on " , len(outputs), " samples..")
 
 _, predicted = torch.max(outputs, 1)
 
-print(outputs)
+#print(outputs)
+#print(len(outputs))
 
-## I believe this should store your output as a CSV in the main directory.
-output_df = pd.DataFrame(output.numpy())
+#print(type(outputs))
+
+outputs_detach = outputs.detach().numpy()
+#print(len(outputs_detach))
+
+## Anthony: I believe this should store your output as a CSV in the main directory.
+output_df = pd.DataFrame(outputs_detach)
 output_df.to_csv('raw_output.csv', sep = ",", index = False)
-
-#print(predicted)
-
-#classes = ('plane', 'car', 'bird', 'cat',
-#           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-
-#print('Predicted: ', ' '.join('%5s' % classes[predicted[j]]
-#                              for j in range(10)))
-
-
-
-
-
-
-
-# next things to do.. pick 20 images for each numerosity, put into their own folder
-# next, test on those images and see if the final layer activation (outputs) changes
-
-
-#Question: What would a higher/lower activation correspond to???
