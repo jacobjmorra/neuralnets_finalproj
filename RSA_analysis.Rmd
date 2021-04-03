@@ -1,0 +1,133 @@
+---
+title: "RSA on network's last layer response"
+author: "Aymee"
+date: "12/08/2020"
+output: html_document
+---
+
+1. Read files
+
+```{r}
+# Get the similarity data
+rawdata = read.csv('raw_output.csv')
+stimdata = read.csv('stim_data.csv')
+
+anova_data = read.csv('significant_units.csv')
+anova_data$responsive = anova_data$unit_sig < 0.01
+
+# separate data from responsive and non responsive units:
+responsive = rawdata[,anova_data$responsive]
+nonresponsive = rawdata[,!anova_data$responsive]
+
+# Condition we are testing: '_ordered' vs '_random' presentation
+cond = '_ordered'
+
+```
+
+2. Prepare data
+
+```{r, eval = dd, echo = FALSE}
+# add info about stimuli that was being presented
+rawdata = cbind(num = rep(c(1:10), each = 80), rawdata)
+responsive = cbind(num = rep(c(1:10), each = 80), responsive)
+nonresponsive = cbind(num = rep(c(1:10), each = 80), nonresponsive)
+
+# Get average activation across each numerosity
+# for the whole layer:
+ave_activation_all = aggregate(.~num, rawdata, FUN = mean)
+# for the responsive units: 
+ave_activation_resp = aggregate(.~num, responsive, FUN = mean)
+# for the non-responsive units
+ave_activation_nonresp = aggregate(.~num, nonresponsive, FUN = mean)
+
+# Calculate all the pair-wise similarities between our stimuli
+similarity = data.frame(s1 = rep(c(1:10), each = 10), 
+                        s2 = rep(c(1:10), 10),
+                        ratio = numeric(100),
+                        all = numeric(100), 
+                        resp = numeric(100), 
+                        nonresp = numeric(100))
+  
+for (i in 1:nrow(similarity)) {
+  num1 = similarity$s1[i]
+  num2 = similarity$s2[i]
+  
+  # similarity predicted by the ratio model
+  similarity$ratio[i] = pmin(num1,num2) / pmax(num1,num2)
+  
+  # observed similarity, for the whole layer
+  similarity$all[i] = cor(t(ave_activation_all[num1,-1]),
+                          t(ave_activation_all[num2,-1]))
+  
+  # observed similarity, for the responsive units
+  similarity$resp[i] = cor(t(ave_activation_resp[num1,-1]),
+                           t(ave_activation_resp[num2,-1]))  
+
+  # observed similarity, for the non-responsive units
+  similarity$nonresp[i] = cor(t(ave_activation_nonresp[num1,-1]),
+                           t(ave_activation_nonresp[num2,-1]))  
+  }
+
+# remove the diagonal
+similarity[similarity$s1==similarity$s2, c(3, 4, 5, 6)] = NA
+
+```
+
+3. Plot observed similarities
+
+```{r}
+library(ggplot2)
+# Similarity matrix predicted by a Ratio model 
+p1 = ggplot(data = similarity, aes(as.factor(s1), as.factor(s2), fill = ratio)) +
+    geom_tile(show.legend = TRUE) +
+    scale_fill_gradient(low = "gold", high = "red3", na.value = "grey20") +
+    labs(fill = "r", x = "", y = "") +
+    labs(title = "Similarities predicted by a Ratio model") +
+    coord_equal()
+
+p1
+
+ggsave(filename = paste('RSA_RatioModel', cond, '.png', sep = ""), p1)
+```
+
+```{r}
+# Observed similarities across the whole layer 
+p2 = ggplot(data = similarity, aes(as.factor(s1), as.factor(s2), fill = all)) +
+    geom_tile(show.legend = TRUE) +
+    scale_fill_gradient(low = "gold", high = "red3", na.value = "grey20") +
+    labs(fill = "r", x = "", y = "") +
+    labs(title = "Similarity matrix - Whole layer") +
+    coord_equal()
+
+p2
+
+ggsave(filename = paste('RSA_AllUnits', cond, '.png', sep = ""), p2)
+```
+
+```{r}
+# Observed similarity in responsive units only
+p3 = ggplot(data = similarity, aes(as.factor(s1), as.factor(s2), fill = resp)) +
+    geom_tile(show.legend = TRUE) +
+    scale_fill_gradient(low = "gold", high = "red3", na.value = "grey20") +
+    labs(fill = "", x = "", y = "") +
+    labs(title = "Similarity matrix - Units sensitive to numerosity") +
+    coord_equal()
+
+p3
+
+ggsave(filename = paste('RSA_ResponsiveUnits', cond, '.png', sep = ""), p3)
+```
+
+```{r}
+# Observed similarity in non-responsive units only
+p4 = ggplot(data = similarity, aes(as.factor(s1), as.factor(s2), fill = nonresp)) +
+    geom_tile(show.legend = TRUE) +
+    scale_fill_gradient(low = "gold", high = "red3", na.value = "grey20") +
+    labs(fill = "", x = "", y = "") +
+    labs(title = "Similarity matrix - Units not sensitive to numerosity") +
+    coord_equal()
+
+p4
+
+ggsave(filename = paste('RSA_NonResponsiveUnits', cond, '.png', sep = ""), p4)
+```
